@@ -3,7 +3,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
-SPHINXPROJ    = 36120_26sp_group36_25611094_package
+SPHINXPROJ    = 36120_26sp_mlkit_aby
 SOURCEDIR     = .
 BUILDDIR      = _build
 

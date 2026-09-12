@@ -1,11 +1,11 @@
-"""Unit tests for group36_25611094_package.helpers.eda."""
+"""Unit tests for mlkit_aby.helpers.eda."""
 
 from __future__ import annotations
 
 import pandas as pd
 import pytest
 
-from group36_25611094_package.helpers import eda
+from mlkit_aby.helpers import eda
 
 
 def test_dataset_overview_counts(sample_df):

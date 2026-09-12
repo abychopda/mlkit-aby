@@ -1,4 +1,4 @@
-"""Unit tests for group36_25611094_package.helpers.preprocessing."""
+"""Unit tests for mlkit_aby.helpers.preprocessing."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 
-from group36_25611094_package.helpers import preprocessing
+from mlkit_aby.helpers import preprocessing
 
 CATEGORICAL = ["position"]
 

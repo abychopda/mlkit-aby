@@ -6,7 +6,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u"36120_26sp_group36_25611094_package"
+project = u"36120_26sp_mlkit_aby"
 copyright = u"2026, Aby"
 author = u"Aby"
 

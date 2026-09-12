@@ -1,29 +1,32 @@
 [project]
-name = "36120-26sp-group36-25611094-package"
-version = "0.1.7"
-description = "Add your description here"
+name = "mlkit-aby"
+version = "0.2.0"
+description = "A reusable machine learning toolkit for reproducible experimentation and weather-derived forecasting."
 readme = "README.md"
 authors = [
-    { name = "abychopda", email = "abychopda@gmail.com" }
+    { name = "Abhishek Chopda", email = "abychopda@gmail.com" }
 ]
-requires-python = ">=3.13.9"
+requires-python = ">=3.13"
 dependencies = [
     "pandas",
     "numpy",
     "scikit-learn",
+    "matplotlib",
+    "seaborn",
+    "requests",
+    "joblib",
 ]
 
 [tool.uv.build-backend]
-module-name = "group36_25611094_package"
+module-name = "mlkit_aby"
 module-root = "src"
-
-[project.scripts]
-36120-26sp-group36-25611094-package = "group36_25611094_package:main"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
 
+# TestPyPI is declared explicitly so that publishing never targets the real
+# PyPI index by accident.
 [[tool.uv.index]]
 name = "testpypi"
 url = "https://test.pypi.org/simple/"
@@ -31,11 +34,11 @@ publish-url = "https://test.pypi.org/legacy/"
 explicit = true
 
 [tool.uv.sources]
-36120-26sp-group36-25611094-package = { workspace = true }
+mlkit-aby = { workspace = true }
 
 [dependency-groups]
 dev = [
-    "36120-26sp-group36-25611094-package",
+    "mlkit-aby",
     "pytest>=8",
 ]
 

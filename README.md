@@ -1,79 +1,75 @@
-# Group 36 Data Science Helper Package
+# mlkit-aby
 
-A reusable Python package developed for the UTS Data Science project. The package provides common utilities used across the project's experiment notebooks to support consistent and reproducible data science workflows.
+A reusable Python machine learning toolkit that supports consistent,
+reproducible experimentation across data science projects.
 
-## Package Purpose
+The package centralises general-purpose functionality so that experiment
+notebooks are free to focus on experiment-specific decisions, analysis and
+interpretation rather than repeating boilerplate.
 
-The package was created to centralise reusable data science functionality used across multiple experiments. This reduces repetitive code and allows experiment notebooks to focus on experiment-specific decisions, analysis, and interpretation.
+## Design philosophy
 
-The package is intended to support a clear separation between:
+> Reusable functionality belongs in the package; experiment-specific
+> decisions remain in the notebooks.
 
-- **Reusable functionality** — maintained within the package.
-- **Experiment-specific decisions** — maintained within the experiment notebooks.
+## Installation
 
-## Features
+The package is published to [TestPyPI](https://test.pypi.org/):
 
-The package provides reusable utilities supporting:
-
-- Exploratory data analysis
-- Data preprocessing
-- Correlation analysis
-- Machine learning modelling
-- Model evaluation
-- Model visualisation
-- Kaggle submission generation
-
-## Package Structure
-
-```text
-group36_25611094_package/
-│
-├── helpers/
-│
-└── All the .py files which have the reuseable functions.
+```bash
+pip install --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            mlkit-aby
 ```
 
-The `helpers` module contains the reusable functionality used throughout the project.
+The `--extra-index-url` is required because TestPyPI does not mirror the
+package's dependencies (pandas, scikit-learn and so on), which are resolved
+from the real PyPI.
 
-## Project Workflow
-
-The package supports the following general workflow:
+## Package structure
 
 ```text
-Data
-  ↓
-Exploratory Analysis
-  ↓
-Preprocessing
-  ↓
-Modelling
-  ↓
-Evaluation
-  ↓
-Visualisation
-  ↓
-Submission
+mlkit_aby/
+│
+└── helpers/
+    ├── cleaning.py        # dataset cleaning utilities
+    ├── eda.py             # exploratory data analysis summaries
+    ├── features.py        # feature construction utilities
+    ├── importance.py      # correlation and feature importance analysis
+    ├── io.py              # dataset loading and saving
+    ├── modeling.py        # model training and evaluation
+    ├── preprocessing.py   # encoding and transformation
+    ├── utils.py           # shared general-purpose utilities
+    └── visualization.py   # plotting utilities
 ```
 
-This structure allows common operations to be reused consistently across different experiments.
+## Development
 
-## Design Philosophy
+The project uses [uv](https://docs.astral.sh/uv/) for dependency management
+and packaging.
 
-The package follows a simple principle:
+```bash
+# Install the project together with its development dependencies
+uv sync
 
-> Reusable functionality belongs in the package; experiment-specific decisions remain in the notebooks.
+# Run the test suite
+uv run pytest
+```
 
-This means that the package focuses on general-purpose functionality, while the experiment notebooks contain the hypotheses, modelling decisions, feature-selection choices, experimental comparisons, and interpretation of results.
+## Publishing a new version
 
-## Project Context
+```bash
+# 1. Bump the version in pyproject.toml and record the change in CHANGELOG.md
+# 2. Build the distribution artefacts
+uv build
 
-This package was developed as part of a UTS Master of Data Science and Innovation project for the AMLA subject involving machine learning experimentation and Kaggle-based model evaluation.
+# 3. Upload to TestPyPI
+uv publish --index testpypi
+```
 
-It is intended to support reproducible and consistent experimentation across the project.
+## Author
 
-## Authors
+**Abhishek Chopda** — Student ID **25611094**
 
-**Abhishek Chopda**
-
-**Master of Data Science and Innovation**  
-**University of Technology Sydney (UTS)**
+Master of Data Science and Innovation
+University of Technology Sydney (UTS)

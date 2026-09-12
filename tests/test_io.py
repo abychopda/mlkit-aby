@@ -1,11 +1,11 @@
-"""Unit tests for group36_25611094_package.helpers.io."""
+"""Unit tests for mlkit_aby.helpers.io."""
 
 from __future__ import annotations
 
 import pandas as pd
 import pytest
 
-from group36_25611094_package.helpers import io
+from mlkit_aby.helpers import io
 
 
 def test_save_then_load_roundtrip(tmp_path):
