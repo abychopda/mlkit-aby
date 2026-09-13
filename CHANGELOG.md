@@ -2,6 +2,29 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (13/09/2026)
+
+### Added
+
+- `helpers.modeling` — linear, ridge and random forest regressors, a random
+  forest classifier defaulting to balanced class weights, and metric
+  functions for both regression and multiclass classification. Classification
+  metrics report per-class recall and F1 for every label supplied, so a rare
+  class that never appears in a split is still visible rather than silently
+  omitted.
+- `helpers.importance` — coefficient, impurity and permutation based feature
+  importance, returned in a consistent tabular form.
+- `helpers.visualization` — predicted against actual, residual, forecast
+  timeline, feature importance and multiclass confusion matrix plots.
+
+### Fixed
+
+- `helpers.eda.numerical_summary` referenced an unimported `Literal` in its
+  signature, and declared a permitted value that did not match its own
+  default. The parameter is now annotated as `str`.
+- Consolidated import statements in `helpers.visualization`, which had
+  accumulated part-way down the module.
+
 ## v0.2.0 (12/09/2026)
 
 This release renames and generalises the package so that it can be reused

@@ -103,7 +103,7 @@ def data_types_summary(df: pd.DataFrame) -> pd.DataFrame:
 def numerical_summary(
     df: pd.DataFrame,
     feature: str | None = None,
-    include: Literal["np.number"] = "number",
+    include: str = "number",
 ) -> pd.DataFrame:
     """
     Generate descriptive statistics for numerical features in a DataFrame.
@@ -120,7 +120,7 @@ def numerical_summary(
             descriptive statistics are generated for all numerical features.
             Defaults to None.
 
-        include (Literal["number"], optional):
+        include (str, optional):
             Data type category to include in the summary. Defaults to
             numerical columns.
 

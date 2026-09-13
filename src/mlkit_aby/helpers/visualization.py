@@ -11,8 +11,14 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.metrics import (
+    average_precision_score,
+    confusion_matrix,
+    precision_recall_curve,
+)
 
 
 def plot_numeric_feature_by_target(
@@ -120,12 +126,6 @@ def plot_correlation_heatmap(
 
 
 
-from sklearn.metrics import (
-    precision_recall_curve,
-    average_precision_score,
-)
-
-
 def plot_precision_recall_curve(
     y_true,
     y_proba,
@@ -222,9 +222,6 @@ def plot_logistic_coefficients(
 
 
 
-from sklearn.metrics import confusion_matrix
-
-
 def plot_confusion_matrix(
     y_true,
     y_proba,
@@ -302,3 +299,213 @@ def plot_confusion_matrix(
     plt.show()
 
     return confusion_table
+
+# --------------------------------------------------------------------------
+# Regression diagnostics
+# --------------------------------------------------------------------------
+
+
+def plot_predicted_vs_actual(
+    y_true,
+    y_pred,
+    title="Predicted vs Actual",
+    figsize=(7, 7),
+) -> Figure:
+    """
+    Plot predicted values against observed values.
+
+    A perfect model places every point on the diagonal. Systematic
+    departures reveal bias: points below the line at high values, for
+    instance, mean the model under-predicts when the true value is large.
+
+    Args:
+        y_true: Observed target values.
+        y_pred: Predicted target values.
+        title: Title for the plot.
+        figsize: Figure size in inches.
+
+    Returns:
+        Figure: The matplotlib figure.
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.scatter(y_true, y_pred, alpha=0.3, edgecolor="none")
+
+    # Reference line showing where perfect predictions would fall.
+    lower = min(np.min(y_true), np.min(y_pred))
+    upper = max(np.max(y_true), np.max(y_pred))
+    ax.plot([lower, upper], [lower, upper], linestyle="--", linewidth=1.5, color="black")
+
+    ax.set_xlabel("Actual")
+    ax.set_ylabel("Predicted")
+    ax.set_title(title)
+    fig.tight_layout()
+
+    return fig
+
+
+def plot_residuals(
+    y_true,
+    y_pred,
+    title="Residuals vs Predicted",
+    figsize=(9, 5),
+) -> Figure:
+    """
+    Plot residuals against predicted values.
+
+    Residuals should scatter randomly around zero with constant spread.
+    A funnel shape indicates the error grows with the prediction, and
+    curvature indicates the model is missing a non-linear relationship.
+
+    Args:
+        y_true: Observed target values.
+        y_pred: Predicted target values.
+        title: Title for the plot.
+        figsize: Figure size in inches.
+
+    Returns:
+        Figure: The matplotlib figure.
+    """
+    residuals = np.asarray(y_true) - np.asarray(y_pred)
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.scatter(y_pred, residuals, alpha=0.3, edgecolor="none")
+    ax.axhline(0, linestyle="--", linewidth=1.5, color="black")
+
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("Residual (actual - predicted)")
+    ax.set_title(title)
+    fig.tight_layout()
+
+    return fig
+
+
+def plot_forecast_timeline(
+    dates,
+    y_true,
+    y_pred,
+    title="Forecast vs Actual Over Time",
+    figsize=(14, 5),
+) -> Figure:
+    """
+    Plot observed and predicted values against time.
+
+    This is the view that reveals whether a forecast tracks seasonal
+    structure or merely predicts the average, which the scatter plots
+    cannot show.
+
+    Args:
+        dates: Dates corresponding to each observation.
+        y_true: Observed target values.
+        y_pred: Predicted target values.
+        title: Title for the plot.
+        figsize: Figure size in inches.
+
+    Returns:
+        Figure: The matplotlib figure.
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.plot(dates, y_true, label="Actual", linewidth=1.2)
+    ax.plot(dates, y_pred, label="Predicted", linewidth=1.2, alpha=0.8)
+
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Value")
+    ax.set_title(title)
+    ax.legend()
+    fig.tight_layout()
+
+    return fig
+
+
+# --------------------------------------------------------------------------
+# Feature importance
+# --------------------------------------------------------------------------
+
+
+def plot_feature_importance(
+    importance_df: pd.DataFrame,
+    value_column="importance",
+    feature_column="feature",
+    top_n=20,
+    title="Feature Importance",
+    figsize=(9, 8),
+) -> Figure:
+    """
+    Plot the most important features as a horizontal bar chart.
+
+    Args:
+        importance_df: Table of feature importances.
+        value_column: Column holding the importance value.
+        feature_column: Column holding the feature name.
+        top_n: Number of features to display.
+        title: Title for the plot.
+        figsize: Figure size in inches.
+
+    Returns:
+        Figure: The matplotlib figure.
+    """
+    top_features = importance_df.nlargest(top_n, value_column).iloc[::-1]
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.barh(top_features[feature_column], top_features[value_column])
+
+    ax.set_xlabel(value_column.replace("_", " ").title())
+    ax.set_title(title)
+    fig.tight_layout()
+
+    return fig
+
+
+# --------------------------------------------------------------------------
+# Multiclass classification diagnostics
+# --------------------------------------------------------------------------
+
+
+def plot_multiclass_confusion_matrix(
+    y_true,
+    y_pred,
+    labels,
+    display_labels=None,
+    normalize=None,
+    title="Confusion Matrix",
+    figsize=(7, 6),
+) -> Figure:
+    """
+    Plot a confusion matrix for a multiclass problem.
+
+    Args:
+        y_true: Observed class labels.
+        y_pred: Predicted class labels.
+        labels: Full list of possible class labels, in display order.
+        display_labels: Human-readable names for each class.
+        normalize: Passed to sklearn; use ``"true"`` to show per-class
+            recall, which is easier to read when classes are imbalanced.
+        title: Title for the plot.
+        figsize: Figure size in inches.
+
+    Returns:
+        Figure: The matplotlib figure.
+    """
+    matrix = confusion_matrix(y_true, y_pred, labels=labels, normalize=normalize)
+
+    if display_labels is None:
+        display_labels = labels
+
+    fig, ax = plt.subplots(figsize=figsize)
+    sns.heatmap(
+        matrix,
+        annot=True,
+        fmt=".2f" if normalize else "d",
+        cmap="Blues",
+        xticklabels=display_labels,
+        yticklabels=display_labels,
+        ax=ax,
+    )
+
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("Actual")
+    ax.set_title(title)
+    fig.tight_layout()
+
+    return fig
