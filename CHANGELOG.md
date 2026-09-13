@@ -22,6 +22,14 @@ across projects rather than being tied to a single assignment dataset.
 
 ### Added
 
+- `helpers.weather` — retrieval of historical observations from the
+  Open-Meteo archive and forecast APIs, and aggregation of hourly
+  observations into daily values.
+- `helpers.targets` — the Climate Comfort Index, the Weather Hazard Index
+  and the Weather Hazard Category, including their component scores.
+- `helpers.timeseries` — lag, rolling window and cyclical calendar
+  features, supervised frame construction, and chronological splitting with
+  a horizon-length embargo at each boundary.
 - Project hygiene: a `.gitignore` covering Python caches, build artefacts
   and virtual environments, and removal of previously committed
   `__pycache__` directories.
