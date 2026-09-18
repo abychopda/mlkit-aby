@@ -12,6 +12,15 @@
   metrics report per-class recall and F1 for every label supplied, so a rare
   class that never appears in a split is still visible rather than silently
   omitted.
+- `helpers.features` — `build_daily_features`, which assembles the complete
+  feature set from raw hourly observations according to a declarative
+  recipe, and `required_history_days`, which derives how much history a
+  recipe needs to produce one row. Centralising this prevents
+  training/serving skew: the recipe is stored in the model artefact, so a
+  deployed service builds features exactly as the model was trained.
+- `helpers.modeling.make_scaled_pipeline` — chains a scaler and an estimator
+  into one object, so that scaling cannot be forgotten or applied
+  differently at prediction time.
 - `helpers.importance` — coefficient, impurity and permutation based feature
   importance, returned in a consistent tabular form.
 - `helpers.visualization` — predicted against actual, residual, forecast

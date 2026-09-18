@@ -100,3 +100,47 @@ class TestClassification:
         metrics = modeling.evaluate_classification(y, y, labels=[0, 1, 2, 3])
         assert metrics["macro_f1"] == pytest.approx(1.0)
         assert metrics["balanced_accuracy"] == pytest.approx(1.0)
+
+
+class TestScaledPipeline:
+    def test_pipeline_matches_manual_scaling(self, linear_data):
+        # The refactor must not change results: scaling inside a pipeline
+        # has to give the same predictions as scaling by hand beforehand.
+        from sklearn.linear_model import Ridge
+        from sklearn.preprocessing import StandardScaler
+
+        X, y = linear_data
+
+        manual_scaler = StandardScaler()
+        X_scaled = manual_scaler.fit_transform(X)
+        manual_model = Ridge(alpha=10.0, random_state=42).fit(X_scaled, y)
+        manual_predictions = manual_model.predict(manual_scaler.transform(X))
+
+        pipeline = modeling.make_scaled_pipeline(Ridge(alpha=10.0, random_state=42))
+        pipeline.fit(X, y)
+
+        assert pipeline.predict(X) == pytest.approx(manual_predictions)
+
+    def test_fitted_model_is_reachable(self, linear_data):
+        from sklearn.linear_model import Ridge
+
+        X, y = linear_data
+        pipeline = modeling.make_scaled_pipeline(Ridge(alpha=1.0)).fit(X, y)
+
+        assert hasattr(pipeline.named_steps["model"], "coef_")
+
+    def test_scaler_is_fitted_on_training_data_only(self, linear_data):
+        # Transforming later data must reuse the training statistics rather
+        # than recomputing them, which would leak information.
+        from sklearn.linear_model import Ridge
+
+        X, y = linear_data
+        train, later = X.iloc[:100], X.iloc[100:]
+
+        pipeline = modeling.make_scaled_pipeline(Ridge(alpha=1.0))
+        pipeline.fit(train, y.iloc[:100])
+
+        scaler = pipeline.named_steps["scaler"]
+        assert scaler.mean_ == pytest.approx(train.mean().to_numpy())
+        # The later block has a different mean, which must not be used.
+        assert scaler.mean_ != pytest.approx(later.mean().to_numpy())

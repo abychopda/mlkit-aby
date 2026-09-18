@@ -12,6 +12,8 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 def run_logistic_regression_grid_search(
     X_train,
@@ -287,3 +289,44 @@ def evaluate_classification(
         metrics[f"f1_class_{label}"] = float(f1)
 
     return metrics
+
+
+# --------------------------------------------------------------------------
+# Pipelines
+# --------------------------------------------------------------------------
+
+
+def make_scaled_pipeline(estimator, scaler=None) -> Pipeline:
+    """
+    Chain a scaler and an estimator into a single object.
+
+    Keeping the two together matters at deployment. Scaling and prediction
+    are a single operation from the model's point of view: predictions made
+    on unscaled inputs, or on inputs scaled using different statistics, are
+    wrong rather than merely worse. Bundling them means the saved artefact
+    cannot be used incorrectly, because there is no separate scaling step to
+    forget or to apply differently.
+
+    Fitting the pipeline also fits the scaler on the training data only, and
+    every later call reuses those statistics. That is the correct behaviour
+    for a time series: the scaler available at prediction time is the one
+    fitted when the model was trained.
+
+    Args:
+        estimator:
+            Any scikit-learn estimator, already configured with its
+            hyperparameters.
+
+        scaler:
+            Scaler to apply first. Defaults to a StandardScaler.
+
+    Returns:
+        Pipeline:
+            An unfitted pipeline of ``scaler`` followed by ``model``. The
+            fitted estimator is reachable afterwards as
+            ``pipeline.named_steps["model"]``.
+    """
+    if scaler is None:
+        scaler = StandardScaler()
+
+    return Pipeline([("scaler", scaler), ("model", estimator)])
