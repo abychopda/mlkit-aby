@@ -22,6 +22,7 @@ artefact and read back at prediction time:
         "statistics": ["mean", "std"],
         "derived_indices": ["cci"],
         "within_day": True,
+        "within_day_columns": {...},   # optional; defaults to the full set
         "within_day_lags": [1],
         "rain_features": True,
     }
@@ -130,20 +131,21 @@ def build_daily_features(
     # 5. Cyclical calendar encoding.
     features = timeseries.add_calendar_features(features)
 
-    # 6. Within-day variation, which the daily means discard.
+    # 6. Within-day variation, which the daily means discard. A recipe may
+    #    name the aggregations it wants; otherwise the full default set is
+    #    used.
     if recipe.get("within_day"):
-        within_day = weather.aggregate_to_daily(
-            hourly, weather.FEATURE_DAILY_AGGREGATIONS
+        within_day_aggregations = recipe.get(
+            "within_day_columns", weather.FEATURE_DAILY_AGGREGATIONS
         )
+        within_day = weather.aggregate_to_daily(hourly, within_day_aggregations)
         features = features.merge(within_day, on="date", how="left")
 
         features["temperature_range"] = (
             features["temperature_2m_max"] - features["temperature_2m_min"]
         )
 
-        within_day_columns = list(weather.FEATURE_DAILY_AGGREGATIONS) + [
-            "temperature_range"
-        ]
+        within_day_columns = list(within_day_aggregations) + ["temperature_range"]
 
         if recipe.get("within_day_lags"):
             features = timeseries.add_lag_features(

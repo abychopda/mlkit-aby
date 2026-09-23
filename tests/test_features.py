@@ -150,3 +150,27 @@ class TestRainFeatures:
         ]
         truncated = features.build_daily_features(truncated_hourly)
         pd.testing.assert_series_equal(full.loc[cutoff], truncated.loc[cutoff], check_names=False)
+
+
+class TestWithinDayColumns:
+    def test_recipe_can_choose_the_within_day_aggregations(self, synthetic_hourly):
+        recipe = dict(
+            features.DEFAULT_RECIPE,
+            within_day_columns={
+                "temperature_2m_max": ("temperature_2m", "max"),
+                "temperature_2m_min": ("temperature_2m", "min"),
+            },
+            within_day_lags=[],
+        )
+        result = features.build_daily_features(synthetic_hourly, recipe)
+
+        assert "temperature_2m_max" in result.columns
+        assert "temperature_range" in result.columns
+        # Not requested, so must be absent.
+        assert "precipitation_hours" not in result.columns
+        assert "temperature_2m_max_lag1" not in result.columns
+
+    def test_default_set_is_unchanged(self, synthetic_hourly):
+        result = features.build_daily_features(synthetic_hourly)
+        assert "precipitation_hours" in result.columns
+        assert "temperature_2m_max_lag1" in result.columns

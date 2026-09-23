@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.2 (24/09/2026)
+
+### Added
+
+- A recipe may set `within_day_columns` to choose which within-day
+  aggregations are computed, instead of always using the full default set.
+  Omitting the key keeps the previous behaviour.
+
 ## v0.3.1 (23/09/2026)
 
 ### Added
