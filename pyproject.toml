@@ -1,6 +1,6 @@
 [project]
 name = "mlkit-aby"
-version = "0.3.0"
+version = "0.3.1"
 description = "A reusable machine learning toolkit for reproducible experimentation and weather-derived forecasting."
 readme = "README.md"
 authors = [

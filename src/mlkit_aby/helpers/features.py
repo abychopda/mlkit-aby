@@ -23,6 +23,7 @@ artefact and read back at prediction time:
         "derived_indices": ["cci"],
         "within_day": True,
         "within_day_lags": [1],
+        "rain_features": True,
     }
 """
 
@@ -52,7 +53,14 @@ DEFAULT_RECIPE: dict = {
     # Within-day spread, which the daily means used by the targets discard.
     "within_day": True,
     "within_day_lags": [1],
+    # Rainfall-specific features. Raw millimetres are a poor input because
+    # roughly half of all days are zero; these describe rainfall in ways that
+    # vary more usefully.
+    "rain_features": True,
 }
+
+#: Window lengths used by the rainfall features, in days.
+RAIN_FEATURE_WINDOWS = [7, 30]
 
 
 def build_daily_features(
@@ -142,7 +150,80 @@ def build_daily_features(
                 features, within_day_columns, recipe["within_day_lags"]
             )
 
+    # 7. Rainfall-specific features.
+    if recipe.get("rain_features"):
+        features = add_rain_features(features)
+
     return features
+
+
+def add_rain_features(
+    daily: pd.DataFrame,
+    column: str = "precipitation",
+    wet_day_threshold: float = 1.0,
+    windows: list[int] | None = RAIN_FEATURE_WINDOWS,
+) -> pd.DataFrame:
+    """
+    Add features describing rainfall in ways that vary more than millimetres.
+
+    Daily rainfall totals are difficult for a model to use: about half of all
+    days are exactly zero, so most of the column carries a single value, and
+    the remainder is heavily skewed. These features describe the same rainfall
+    through counts, totals and gaps, which spread out far more evenly.
+
+    All of them look backwards only, so none can see beyond its own row.
+
+    Args:
+        daily (pd.DataFrame):
+            Daily observations containing a rainfall column, ordered by date.
+
+        column (str):
+            Name of the daily rainfall column.
+
+        wet_day_threshold (float):
+            Millimetres at or above which a day counts as a rain day. The
+            default of 1 mm follows the usual meteorological convention and
+            avoids counting a trace of drizzle as rain.
+
+        windows (list[int] | None):
+            Window lengths in days for the counts and totals. Defaults to
+            ``[7, 30]``.
+
+    Returns:
+        pd.DataFrame:
+            A copy of the input with added rainfall features.
+
+    Raises:
+        KeyError:
+            If the rainfall column is absent.
+    """
+    if windows is None:
+        windows = [7, 30]
+
+    if column not in daily.columns:
+        raise KeyError(f"Column '{column}' not found in the input frame.")
+
+    result = daily.copy()
+
+    # Whether today was a rain day at all.
+    result["is_wet_day"] = (result[column] >= wet_day_threshold).astype(int)
+
+    for window in windows:
+        # How many rain days there have been recently.
+        result[f"rain_days_roll{window}"] = (
+            result["is_wet_day"].rolling(window=window, min_periods=window).sum()
+        )
+        # How much rain has fallen in total recently.
+        result[f"{column}_roll{window}_sum"] = (
+            result[column].rolling(window=window, min_periods=window).sum()
+        )
+
+    # How long the current dry spell has been. Counting upwards from the last
+    # rain day separates a long dry spell from a day that has just cleared.
+    wet_day_number = result["is_wet_day"].cumsum()
+    result["days_since_rain"] = result.groupby(wet_day_number).cumcount()
+
+    return result
 
 
 def required_history_days(recipe: dict | None = None) -> int:
@@ -169,7 +250,14 @@ def required_history_days(recipe: dict | None = None) -> int:
 
     # A rolling window of n days spans the current day plus n-1 before it;
     # a lag of n reaches n days back, so needs n+1 days inclusive.
-    longest_window = max(recipe.get("windows", [1]))
+    windows = list(recipe.get("windows", [1]))
+
+    # The rainfall features use their own windows, which may reach further
+    # back than the ones named in the recipe.
+    if recipe.get("rain_features"):
+        windows += RAIN_FEATURE_WINDOWS
+
+    longest_window = max(windows)
     longest_lag = max(recipe.get("lags", [0]) + recipe.get("within_day_lags", [0]))
 
     return max(longest_window, longest_lag + 1)

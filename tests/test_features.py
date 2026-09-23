@@ -100,3 +100,53 @@ class TestRequiredHistoryDays:
         ]
         result = features.build_daily_features(window)
         assert result.iloc[-1].notna().all()
+
+
+class TestRainFeatures:
+    def test_expected_columns_created(self, synthetic_hourly):
+        result = features.build_daily_features(synthetic_hourly)
+        for column in ["is_wet_day", "rain_days_roll7", "precipitation_roll7_sum",
+                       "rain_days_roll30", "precipitation_roll30_sum",
+                       "days_since_rain"]:
+            assert column in result.columns
+
+    def test_wet_day_flag_uses_the_threshold(self):
+        daily = pd.DataFrame({"precipitation": [0.0, 0.5, 1.0, 12.0]})
+        result = features.add_rain_features(daily)
+        # 0.5 mm is a trace and does not count as a rain day; 1.0 mm does.
+        assert list(result["is_wet_day"]) == [0, 0, 1, 1]
+
+    def test_days_since_rain_counts_up_then_resets(self):
+        daily = pd.DataFrame({"precipitation": [5.0, 0.0, 0.0, 0.0, 8.0, 0.0]})
+        result = features.add_rain_features(daily)
+        assert list(result["days_since_rain"]) == [0, 1, 2, 3, 0, 1]
+
+    def test_rolling_counts_and_sums(self):
+        daily = pd.DataFrame({"precipitation": [2.0, 0.0, 3.0, 0.0, 0.0, 0.0, 1.0]})
+        result = features.add_rain_features(daily, windows=[7])
+        # Over the full 7-day window: 3 rain days totalling 6 mm.
+        assert result["rain_days_roll7"].iloc[-1] == 3
+        assert result["precipitation_roll7_sum"].iloc[-1] == 6.0
+        # Incomplete windows must stay missing rather than be part-counted.
+        assert result["rain_days_roll7"].iloc[:6].isna().all()
+
+    def test_can_be_switched_off(self, synthetic_hourly):
+        recipe = dict(features.DEFAULT_RECIPE, rain_features=False)
+        result = features.build_daily_features(synthetic_hourly, recipe)
+        assert "is_wet_day" not in result.columns
+
+    def test_history_requirement_accounts_for_rain_windows(self):
+        # Short recipe windows must not hide the 30-day rain window, or the
+        # API would fetch too little data to build a complete row.
+        recipe = dict(features.DEFAULT_RECIPE, windows=[3], lags=[1],
+                      rain_features=True)
+        assert features.required_history_days(recipe) == 30
+
+    def test_no_future_leakage(self, synthetic_hourly):
+        full = features.build_daily_features(synthetic_hourly)
+        cutoff = 60
+        truncated_hourly = synthetic_hourly[
+            synthetic_hourly["time"] < pd.Timestamp("2024-01-01") + pd.Timedelta(days=cutoff + 1)
+        ]
+        truncated = features.build_daily_features(truncated_hourly)
+        pd.testing.assert_series_equal(full.loc[cutoff], truncated.loc[cutoff], check_names=False)

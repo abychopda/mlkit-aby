@@ -2,6 +2,18 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.1 (23/09/2026)
+
+### Added
+
+- `helpers.features.add_rain_features` — rainfall features that vary more
+  usefully than raw millimetres, which are zero on about half of all days:
+  a wet day flag, rolling counts of rain days, rolling rainfall totals and
+  the length of the current dry spell. Enabled by the `rain_features` key
+  in a recipe, and included in `DEFAULT_RECIPE`.
+- `required_history_days` now accounts for the rainfall windows, so a recipe
+  with short rolling windows still reports enough history to build them.
+
 ## v0.3.0 (13/09/2026)
 
 ### Added
